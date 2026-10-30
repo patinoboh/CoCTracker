@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CoC Tracker</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 760px; margin: 0 auto; padding: 1rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; }
+    th, td { text-align: left; padding: .65rem .4rem; border-bottom: 1px solid #8885; }
+    .muted { opacity: .7; }
+  </style>
+</head>
+<body>
+  <h1>CoC Tracker</h1>
+  <p class="muted">Accounts and villages</p>
+  {% for account in accounts %}
+    <h2>{{ account.name }}</h2>
+    <ul>
+      {% for village in account.villages.all %}
+        <li>{{ village.name|default:village.get_village_type_display }}</li>
+      {% empty %}
+        <li>No villages configured.</li>
+      {% endfor %}
+    </ul>
+    <details>
+      <summary>Import game export JSON</summary>
+      <form method="post" action="{% url 'import-account-data' account.id %}">
+        {% csrf_token %}
+        <p>Paste the JSON exported from Clash of Clans. The original data is preserved.</p>
+        <textarea name="json_data" rows="8" cols="60" required></textarea>
+        <br>
+        <button type="submit">Import JSON</button>
+      </form>
+    </details>
+  {% empty %}
+    <p>No accounts configured yet. Add them through the Django admin.</p>
+  {% endfor %}
+
+  <h2>Active upgrades</h2>
+  <table>
+    <thead><tr><th>Account</th><th>Village</th><th>Upgrade</th><th>Finishes</th></tr></thead>
+    <tbody>
+      {% for upgrade in upgrades %}
+        <tr>
+          <td>{{ upgrade.option.village.game_account.name }}</td>
+          <td>{{ upgrade.option.village }}</td>
+          <td>{{ upgrade.option.display_name }} {{ upgrade.from_level }} → {{ upgrade.to_level }}</td>
+          <td>{{ upgrade.finishes_at|date:"Y-m-d H:i" }} UTC</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No active upgrades.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
